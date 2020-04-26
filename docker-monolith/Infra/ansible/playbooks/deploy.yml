@@ -3,7 +3,7 @@
       hosts: all
       gather_facts: False
       tags: deploy-docker-app
-      
+
       tasks:
         - name: Pull Docker image
           docker_image:

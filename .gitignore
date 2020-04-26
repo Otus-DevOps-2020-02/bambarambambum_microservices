@@ -5,4 +5,3 @@
 .terraform/
 *.retry
 variables.json
-.yamllint
