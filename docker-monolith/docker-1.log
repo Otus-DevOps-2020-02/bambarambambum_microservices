@@ -21,9 +21,3 @@ nginx                                  1.12                4037a5562b03        2
 
 The main difference between the image and the container is the writable top layer.
 To create a container, the Docker engine takes an image, adds a writable top layer and initializes various parameters (network ports, container name, identifier and resource limits).
-
-docker-machine create --driver google \
- --google-machine-image https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/family/ubuntu-1604-lts \
- --google-machine-type n1-standard-1 \
- --google-zone europe-west1-b \
- docker-host
