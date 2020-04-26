@@ -1,0 +1,5 @@
+{
+      "my_project_id": "docker",
+      "my_source_image_family": "ubuntu",
+      "my_machine_type": "machine"
+}
