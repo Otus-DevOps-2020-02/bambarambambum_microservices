@@ -1,0 +1,22 @@
+---
+    - name: Check && install python
+      hosts: all
+      become: true
+      gather_facts: False
+
+      tasks:
+        - name: Install python for Ansible
+          raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+          changed_when: False
+
+        - name: Download pip
+          get_url:
+            url: https://bootstrap.pypa.io/get-pip.py
+            dest: /tmp/get-pip.py
+          changed_when: False
+
+        - name: Install pip
+          command: python get-pip.py
+          args:
+            chdir: /tmp
+          changed_when: False

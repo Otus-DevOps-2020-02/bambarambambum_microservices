@@ -1,0 +1,10 @@
+plugin: gcp_compute
+projects: # Проект
+  - docker-275315
+keyed_groups: # Группируем по имени
+  - key: name
+hostnames: # Выводим внешние IP
+  - public_ip
+filters: []
+auth_kind: serviceaccount # Учетные данные
+service_account_file: /home/uadmin/docker.json

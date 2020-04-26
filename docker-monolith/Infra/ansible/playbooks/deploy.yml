@@ -1,0 +1,19 @@
+---
+    - name: Deploy Docker App
+      hosts: all
+      gather_facts: False
+      tags: deploy-docker-app
+
+      tasks:
+        - name: Pull Docker image
+          docker_image:
+            name: androsovm/otus-reddit:1.0
+
+        - name: Create container
+          docker_container:
+            name: reddit-app
+            image: androsovm/otus-reddit:1.0
+            state: started
+            ports:
+              - "9292:9292"
+            detach: true

@@ -1,0 +1,20 @@
+---
+    - name: Install Docker
+      hosts: all
+      become: true
+      gather_facts: False
+      tags: deploy-docker
+
+      tasks:
+        - name: Install Docker
+          raw: apt -y update && apt install -y docker.io
+          changed_when: false
+
+        - name: Add default_user to docker
+          user:
+            name: mikh_androsov
+            group: docker
+
+        - name: Install Docker module for python
+          raw: pip install docker
+

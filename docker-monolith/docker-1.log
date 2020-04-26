@@ -1,0 +1,23 @@
+REPOSITORY                             TAG                 IMAGE ID            CREATED             SIZE
+bambarambambum/ubuntu-temp             latest              c25f512af19f        22 seconds ago      125MB
+ubuntu                                 16.04               005d2078bdfa        37 hours ago        125MBdok
+androsovm/office18                     latest              29d4c578a869        4 weeks ago         275MB
+<none>                                 <none>              ba25bdd38d6e        4 weeks ago         1.97GB
+androsovm/office27                     latest              b9775931f958        4 weeks ago         275MB
+reverseproxy_proxy                     latest              b9b0ceb74222        3 months ago        108MB
+reverseproxy                           latest              241bf3d23b39        3 months ago        24.5MB
+docker-apline                          latest              d98878c7f4b4        3 months ago        24.5MB
+nginx                                  alpine              36189e6707f4        3 months ago        21.5MB
+httpd                                  alpine              52862a02e4e9        3 months ago        112MB
+mcr.microsoft.com/dotnet/core/sdk      2.1-stretch         d3fad9b1ee71        9 months ago        1.74GB
+mcr.microsoft.com/dotnet/core/aspnet   2.1-stretch-slim    1b31cbe6a2cd        9 months ago        253MB
+zabbix/zabbix-agent                    latest              5648b46f2129        9 months ago        14.9MB
+php                                    7.2-apache          a84518471797        9 months ago        381MB
+mysql                                  latest              c7109f74d339        10 months ago       443MB
+phpmyadmin/phpmyadmin                  latest              626319eaebed        10 months ago       421MB
+mysql/mysql-server                     5.7                 857eadf53a54        12 months ago       258MB
+mysql/mysql-server                     latest              39649194a7e7        12 months ago       289MB
+nginx                                  1.12                4037a5562b03        24 months ago       108MB
+
+The main difference between the image and the container is the writable top layer.
+To create a container, the Docker engine takes an image, adds a writable top layer and initializes various parameters (network ports, container name, identifier and resource limits).
