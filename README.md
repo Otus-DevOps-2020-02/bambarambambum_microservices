@@ -29,7 +29,7 @@ To create a container, the Docker engine takes an image, adds a writable top lay
 2) With Terraform, we deploy the required number of instances from the finished image
 3) We launch a playbook that checks whether everything is installed, downloads the docker image and launches it
 </details>
-**<details><summary>Homework 16 (Docker-3)</summary>**
+<details><summary>Homework 16 (Docker-3)</summary>
 ### Task 1
 To start containers with new variables without restarting the builder, use the following commands
 ```
