@@ -38,6 +38,7 @@ docker run -d --network=reddit --network-alias=app_post --env POST_DATABASE_HOST
 docker run -d --network=reddit --network-alias=app_comment --env COMMENT_DATABASE_HOST=app_comment_db androsovm/comment:1.0
 docker run -d --network=reddit -p 9292:9292 --env POST_SERVICE_HOST=app_post --env COMMENT_SERVICE_HOST=app_comment androsovm/ui:1.0
 ```
+
 ### Task 2
 1) /ui/Dockerfile
 ```
