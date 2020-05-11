@@ -30,6 +30,7 @@ To create a container, the Docker engine takes an image, adds a writable top lay
 3) We launch a playbook that checks whether everything is installed, downloads the docker image and launches it
 </details>
 <details><summary>Homework 16 (Docker-3)</summary>
+
 ### Task 1
 To start containers with new variables without restarting the builder, use the following commands
 ```
@@ -75,4 +76,66 @@ androsovm/post      1.0                 67d1538d796c        8 hours ago         
 androsovm/post      2.0                 82b1e3091aa8        2 hours ago          106MB
 ```
 For faster work of the builder, we also need to replace the ADD instructions with COPY and transfer all the steps for installing packages and copying files to the end of the Dockerfile.
+</details>
+<details><summary>Homework 17 (Docker-4)</summary>
+
+### Task 1 - docker-compose.yml
+1) See the docker-compose.yml and .env.example
+
+### Task 2 - Project name
+```
+docker-compose [-f <arg>...] [options] [COMMAND] [ARGS...]
+-p, --project-name NAME     Specify an alternate project name
+                            (default: directory name)
+```
+Example:
+```
+docker-compose -p hm17 up -d
+```
+```
+Creating network "hm17_front_net" with the default driver
+Creating network "hm17_back_net" with the default driver
+Creating volume "hm17_post_db" with default driver
+...
+```
+We can also name containers using docker-compose.yml
+```
+some_service:
+  container_name: name_name_name
+```
+
+### Task 3 - Override
+1) We need to copy the source to the docker host
+```
+docker-machine scp -r ui/ docker-host:/home/docker-user/ui
+docker-machine scp -r comment/ docker-host:/home/docker-user/comment
+docker-machine scp -r post-py/ docker-host:/home/docker-user/post-py
+```
+2) Created a docker-compose.override.yml file
+```
+...
+  ui:
+    volumes:
+      - /home/docker-user/ui:/app
+    command: 'puma --debug -w 2'
+
+  post:
+    volumes:
+      - /home/docker-user/post-py:/app
+
+  comment:
+    volumes:
+      - /home/docker-user/comment:/app
+    command: 'puma --debug -w 2'
+
+volumes:
+  ui:
+  post:
+  comment:
+```
+3) Start and check
+```
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
+docker ps
+```
 </details>
