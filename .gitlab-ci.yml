@@ -20,7 +20,7 @@ build_job:
   script:
     - echo 'Building'
     - cd docker-monolith
-    - docker build
+    - docker build .
 
 test_unit_job:
   stage: test
