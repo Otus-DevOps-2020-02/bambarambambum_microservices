@@ -1,4 +1,4 @@
-image: ruby:2.4.2
+image: docker:latest
 
 stages:
   - build
@@ -11,17 +11,15 @@ variables:
   DATABASE_URL: 'mongodb://mongo/user_posts'
   DOCKER_HOST: 'tcp://localhost:2378'
 
-#before_script:
-#  - cd reddit
-#  - bundle install
-
 build_job:
-  image: docker:latest
+  services:
+    - docker:dind
   stage: build
   script:
     - echo 'Building'
     - cd docker-monolith
     - docker build .
+    - docker run
 
 test_unit_job:
   stage: test
