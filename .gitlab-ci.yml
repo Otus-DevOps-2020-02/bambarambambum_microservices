@@ -14,10 +14,9 @@ build_job:
   services:
     - docker:dind
   stage: build
-  variables:
-    DOCKER_HOST: "tcp://docker:2375"
   script:
     - echo 'Building'
+    - export DOCKER_HOST=tcp://docker:2375
     - cd docker-monolith
     - docker build .
     - docker run
