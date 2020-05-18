@@ -10,6 +10,10 @@ stages:
 variables:
   DATABASE_URL: 'mongodb://mongo/user_posts'
 
+before_scripts:
+  - docker info
+  - docker run --rm hello-world
+
 build_job:
   services:
     - docker:dind
