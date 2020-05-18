@@ -18,6 +18,7 @@ build_job:
   stage: build
   script:
     - echo 'Building'
+    - puma -d
 
 test_unit_job:
   stage: test
