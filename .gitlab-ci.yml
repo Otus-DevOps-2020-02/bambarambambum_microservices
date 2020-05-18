@@ -16,7 +16,8 @@ build_job:
   script:
     - echo 'Building'
     - cd docker-monolith
-    - docker build .
+    - docker build -t androsovm/gitlab-docker-app:1.0 .
+    - docker run -d androsovm/gitlab-docker-app:1.0
 
 test_unit_job:
   stage: test
