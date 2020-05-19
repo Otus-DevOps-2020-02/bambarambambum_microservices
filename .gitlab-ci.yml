@@ -26,7 +26,6 @@ test_unit_job:
     - bundle install
     - ruby simpletest.rb
 
-
 test_integration_job:
   stage: test
   script:
