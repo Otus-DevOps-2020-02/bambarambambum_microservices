@@ -139,3 +139,64 @@ docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
 docker ps
 ```
 </details>
+<details><summary>Homework 18 (gitlab-ci-1)</summary>
+
+### Task 1 - Build
+1) In order for containers to run in containers (DinD), we need to re-register gitlab-runner
+```
+docker exec -it gitlab-runner gitlab-runner register --run-untagged --locked=false --docker-volumes /var/run/docker.sock:/var/run/docker.sock
+```
+2) Change build_job :, add a docker image
+```
+image: docker:latest
+```
+3) We can use the Dockerfile from previous lessons (docker-monolith)
+```
+script:
+    - echo 'Building'
+    - cd docker-monolith
+    - docker build -t gitlab-docker-app:1.0 .
+```
+4) Now we need to refine test_unit_job:, adding an image and transferring commands from before_script:
+```
+test_unit_job:
+  image: ruby:2.4.2
+  stage: test
+  services:
+    - mongo:latest
+  script:
+    - cd reddit
+    - bundle install
+    - ruby simpletest.rb
+```
+
+### Task 2 - Gitlab-Runner
+1) The easiest way
+1.1) Because we can run infinitely many (in theory) gitlab-runner on one machine, we can launch a new container
+```
+docker run -d --name gitlab-runner2 --restart always \
+-v /srv/gitlab-runner/config:/etc/gitlab-runner \
+-v /var/run/docker.sock:/var/run/docker.sock \
+gitlab/gitlab-runner:latest
+```
+1.2) And take advantage of non-interactive gitlab-runner registration
+```
+docker exec gitlab-runner2 gitlab-runner register \
+           --locked=false \
+           --non-interactive \
+           --url http://34.107.83.160/ \
+           --registration-token v3aNxnjLdRzwYUpmf19e \
+           --description "Docker Runner" \
+           --tag-list "linux,bionic,ubuntu,docker" \
+           --executor docker \
+           --docker-image "alpine:latest" \
+           --docker-volumes /var/run/docker.sock:/var/run/docker.sock
+```
+1.3) We can repeat these steps endlessly by simply changing the name of the container
+2) The hard way
+2.1) We can take advantage of the ready-made role from ansible galaxy
+https://galaxy.ansible.com/riemers/gitlab-runner
+2.2) Instances can be deployed using terraform
+2.3) We can also bake an image using packer with docker and gitlab-runner
+3) Slack chat integration - #mikhail_androsov in devops-team-otus.slack.com
+</details>
