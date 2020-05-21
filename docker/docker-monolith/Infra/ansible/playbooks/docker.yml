@@ -17,4 +17,3 @@
 
         - name: Install Docker module for python
           raw: pip install docker
-
