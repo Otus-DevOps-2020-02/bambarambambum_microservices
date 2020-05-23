@@ -193,10 +193,128 @@ docker exec gitlab-runner2 gitlab-runner register \
            --docker-volumes /var/run/docker.sock:/var/run/docker.sock
 ```
 1.3) We can repeat these steps endlessly by simply changing the name of the container
+
 2) The hard way
 2.1) We can take advantage of the ready-made role from ansible galaxy
 https://galaxy.ansible.com/riemers/gitlab-runner
 2.2) Instances can be deployed using terraform
 2.3) We can also bake an image using packer with docker and gitlab-runner
 3) Slack chat integration - #mikhail_androsov in devops-team-otus.slack.com
+</details>
+<details><summary>Homework 18 (gitlab-ci-1)</summary>
+
+### Task 1 - MongoDB-Exporter
+1) We can take this exporter https://github.com/percona/mongodb_exporter
+2) Need to download repository
+```
+git clone https://github.com/percona/mongodb_exporter.git
+```
+3) Go to the folder with the repository and do docker build
+```
+docker build -t ${USERNAME}/mongodb-exporter:1.0 .
+```
+4) Now add the mongodb-exporter service to docker-compose.yml
+```
+  mongodb-exporter:
+    image: ${USERNAME}/mongodb-exporter:1.0
+    container_name: mongodb-exporter
+    command:
+      - '--mongodb.uri=mongodb://post_db:27017'
+    networks:
+      - back_net
+```
+5) Run docker-compose
+```
+docker-compose up -d
+```
+
+### Task 2 - Blackbox-Exporter
+1) We can use official image from dockerhub https://hub.docker.com/r/prom/blackbox-exporter
+2) Since we need a configuration file for blackbox_exporter to work, create it
+```
+modules:
+  tcp_connect:
+    prober: tcp
+    timeout: 5s
+
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+```
+3) Create a new image prom/blackbox-exporter look and add the config there.
+```
+FROM prom/blackbox-exporter:v0.16.0
+ADD blackbox.yml /config/
+```
+4) Do docker build
+```
+docker build -t ${USERNAME}/blackbox-exporter:1.0 .
+```
+5) Now add the blackbox-exporter service to docker-compose.yml
+blackbox-exporter:
+    image: ${USERNAME}/blackbox-exporter:1.0
+    container_name: blackbox-exporter
+    ports:
+      - '9115:9115'
+    command:
+      - '--config.file=/config/blackbox.yml'
+    networks:
+      - back_net
+6) Now we need to update the prometheus.yml configuration file. We will check the availability of http and tcp
+```
+- job_name: 'blackbox-tcp_connect'
+        metrics_path: /probe
+        params:
+            module: [tcp_connect]
+        static_configs:
+          - targets:
+            - '34.78.221.243:9292'
+        relabel_configs:
+            -
+                source_labels:
+                  - __address__
+                target_label: __param_target
+            -
+                source_labels:
+                  - __param_target
+                target_label: instance
+            -
+                replacement: "blackbox-exporter:9115"
+                target_label: __address__
+
+      - job_name: 'blackbox-http'
+        metrics_path: /probe
+        params:
+            module: [http_2xx]
+        static_configs:
+          - targets:
+            - '34.78.221.243:9292'
+        relabel_configs:
+            -
+                source_labels:
+                  - __address__
+                target_label: __param_target
+            -
+                source_labels:
+                  - __param_target
+                target_label: instance
+            -
+                replacement: "blackbox-exporter:9115"
+                target_label: __address__
+```
+7) Update the prometheus image to add the updated configuration file
+```
+docker build -t ${USERNAME}/prometheus .
+```
+8) Run docker-compose
+```
+docker-compose up -d
+```
+
+### Task 3 - Makefile
+* See Makefile
+1) make - build & push all images
+2) make build_all - only build all images
+3) make push_all - only push all images
 </details>
