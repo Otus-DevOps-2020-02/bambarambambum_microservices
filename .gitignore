@@ -6,3 +6,4 @@
 *.retry
 variables.json
 *.env
+project.json
