@@ -1,53 +1,5 @@
 version: "3.3"
 services:
-  blackbox-exporter:
-    image: ${USERNAME}/blackbox-exporter:1.0
-    container_name: blackbox-exporter
-    ports:
-      - '9115:9115'
-    command:
-      - '--config.file=/config/blackbox.yml'
-    networks:
-      - back_net
-
-  mongodb-exporter:
-    image: ${USERNAME}/mongodb-exporter:1.0
-    container_name: mongodb-exporter
-    command:
-      - '--mongodb.uri=mongodb://post_db:27017'
-    networks:
-      - back_net
-
-  node-exporter:
-    image: prom/node-exporter:v0.15.2
-    container_name: node-exporter
-    user: root
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.ignored-mount-points="^/(sys|proc|dev|host|etc)($$|/)"'
-    networks:
-      - back_net
-
-  prometheus:
-    image: ${USERNAME}/prometheus
-    container_name: prometheus
-    ports:
-      - '9090:9090'
-    volumes:
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention=1d'
-    networks:
-      - back_net
-      - front_net
-
   post_db:
     image: mongo:3.2
     container_name: mongo_db
@@ -82,7 +34,6 @@ services:
       - back_net
 
 volumes:
-  prometheus_data:
   post_db:
 
 networks:

@@ -201,7 +201,7 @@ https://galaxy.ansible.com/riemers/gitlab-runner
 2.3) We can also bake an image using packer with docker and gitlab-runner
 3) Slack chat integration - #mikhail_androsov in devops-team-otus.slack.com
 </details>
-<details><summary>Homework 18 (gitlab-ci-1)</summary>
+<details><summary>Homework 19 (monitoring-1)</summary>
 
 ### Task 1 - MongoDB-Exporter
 1) We can take this exporter https://github.com/percona/mongodb_exporter
@@ -317,4 +317,288 @@ docker-compose up -d
 1) make - build & push all images
 2) make build_all - only build all images
 3) make push_all - only push all images
+</details>
+<details><summary>Homework 20 (monitoring-2)</summary>
+
+### Task 1 - * (Collect Docker metrics with Prometheus)
+1) We will use the setup instructions - https://docs.docker.com/config/daemon/prometheus/
+* docker-machine host - /etc/docker/daemon.json
+```
+{
+  "metrics-addr" : "0.0.0.0:9323",
+  "experimental" : true
+}
+```
+* prometheus.yml
+```
+...
+- job_name: 'docker'
+        static_configs:
+          - targets:
+            - '34.78.221.243:9323'
+```
+2) Do not forget to reload the docker daemon
+```
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+3) For Grafana, download a ready-made dashboard - https://grafana.com/grafana/dashboards/1229
+
+### Task 1 - * (Collect Docker metrics with Telegraf)
+1) Create a new file: /monitoring/telegraf/telegraf.conf
+```
+[[outputs.prometheus_client]]
+    listen = ":9126"
+
+[[inputs.docker]]
+    endpoint = "unix:///var/run/docker.sock"
+    container_names = []
+    timeout = "5s"
+    perdevice = false
+    total = false
+```
+2) Create a new Dockerfile: /monitoring/telegraf/Dockerfile
+```
+FROM telegraf:1.14.3-alpine
+ADD telegraf.conf /etc/telegraf/
+```
+3) Create a new build
+```
+docker build -t $USER_NAME/telegraf .
+```
+4) Edit a docker-compose-monitoring.yml
+```
+telegraf:
+    image: ${USER_NAME}/telegraf
+    container_name: telegraf
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - back_net
+```
+5) Grafana dashboard is stored in the directory /monitoring/grafana/dashboards/Telegraf_Docker_Monitorings.json
+
+### Task 1 - * (Alertmanager email notification)
+1) monitoring/alertmanager/config.yml
+```
+route:
+  receiver: 'slack-email-notifications'
+
+receivers:
+- name: 'slack-email-notifications'
+  slack_configs:
+  - channel: '#mikhail_androsov'
+  email_configs:
+    - to: $GMAIL_ACCOUNT
+      from: $GMAIL_ACCOUNT
+      smarthost: smtp.gmail.com:587
+      auth_username: $GMAIL_ACCOUNT
+      auth_identity: $GMAIL_ACCOUNT
+      auth_password: $GMAIL_PASSWORD
+```
+
+### Task 2 - ** (Dashboards & datasource provisioning)
+1) Create a provisioning folder (monitoring/grafana/provisioning)
+2) Create a dashboards subfolder (monitoring/grafana/provisioning/dashboards) and a datasources subfolder (monitoring/grafana/provisioning/datasources)
+3) Create a dash.yml file (monitoring/grafana/provisioning/dashboards/dash.yml)
+```
+- name: 'default'
+  org_id: 1
+  folder: ''
+  type: 'file'
+  options:
+    folder: '/var/lib/grafana/dashboards'
+```
+4) Create a data.yml file (monitoring/grafana/provisioning/datasources/data.yml)
+```
+datasources:
+    -  access: 'proxy'
+       editable: true
+       is_default: true
+       name: 'Prometheus server'
+       org_id: 1
+       type: 'prometheus'
+       url: 'http://prometheus:9090'
+       version: 1
+```
+5) Create a Dockerfile (monitoring/grafana/Dockerfile) file and add our data to the docker image
+```
+FROM grafana/grafana:5.0.0
+ADD ./provisioning /etc/grafana/provisioning
+ADD ./dashboards /var/lib/grafana/dashboards
+```
+6) Build image
+```
+docker build -t $USER_NAME/grafana .
+```
+7) Update file docker-compose-monitroing.yml
+```
+...
+  grafana:
+    image: ${USER_NAME}/grafana
+...
+8) Restart all containers and remove the volume of Graphana (used Makefile)
+```
+make stop
+docker volume rm docker_grafana_data
+or
+docker-compose down
+docker-compose -f docker-compose-monitoring.yaml down
+docker volume rm docker_grafana_data
+```
+9) Start all containers (Used Makefile)
+```
+make run
+or
+docker-compose up -d
+docker-compose -f docker-compose-monitoring.yaml up -d
+```
+
+### Task 2 - ** (Stackdriver)
+1) Create a folder stackdriver (monitoring/stackdriver)
+2) We will use the completed image prometheuscommunity/stackdriver-exporter:v0.9.0. For his work we need GCP account credentials.
+3) Create a Dockerfile file (monitorin/stackdriver/Dockerfile)
+```
+FROM prometheuscommunity/stackdriver-exporter:v0.9.0
+ADD ./project.json /key/project.json
+```
+4) Build image
+```
+docker build -t $USER_NAME/stackdriver .
+```
+5) Update the Prometheus configuration and build image
+```
+...
+      - job_name: 'stackdriver'
+        static_configs:
+          - targets:
+            - 'stackdriver:9255'
+...
+docker build -t $USER_NAME/prometheus .
+```
+6) Update configuration docker-compose-monitoring.yml
+```
+...
+  stackdriver:
+    image: ${USER_NAME}/stackdriver
+    container_name: stackdriver
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/key/project.json
+      - STACKDRIVER_EXPORTER_GOOGLE_PROJECT_ID=PROJECT_NAME
+      - STACKDRIVER_EXPORTER_MONITORING_METRICS_TYPE_PREFIXES=compute.googleapis.com/instance,pubsub.googleapis.com/subscription,redis.googleapis.com/stats
+    ports:
+      - '9255:9255'
+    networks:
+      - back_net
+...
+```
+7) Do not push a stackdriver image to the docker hub!
+8) Now we can collect many metrics
+* stackdriver_gce_instance_compute_googleapis_com_instance_cpu and submetrics
+* stackdriver_gce_instance_compute_googleapis_com_instance_disk and submetrics
+* stackdriver_gce_instance_compute_googleapis_com_instance_network and submetrics
+* stackdriver_gce_instance_compute_googleapis_com_instance_uptime
+* stackdriver_monitoring_scrapes_total
+* and another
+
+### Task 3 - *** (Trickster)
+* We can use part of the demo version https://github.com/tricksterproxy/trickster/blob/master/deploy/trickster-demo
+1) Create a folder trickster (monitoring/trickster)
+2) Create a configuration trickster.conf file (monitoring/trickster/trickster.conf)
+```
+[frontend]
+listen_port = 8480
+
+[negative_caches]
+  [negative_caches.default]
+  400 = 3
+  404 = 3
+  500 = 3
+  502 = 3
+
+[caches]
+  [caches.fs1]
+  cache_type = 'filesystem'
+    [caches.fs1.filesystem]
+    cache_path = '/data/trickster'
+    [caches.fs1.index]
+    max_size_objects = 512
+    max_size_backoff_objects = 128
+  [caches.mem1]
+  cache_type = 'memory'
+    [caches.mem1.index]
+    max_size_objects = 512
+    max_size_backoff_objects = 128
+
+[tracing]
+  [tracing.std1]
+  tracer_type = 'stdout'
+    [tracing.std1.stdout]
+    pretty_print = true
+
+[origins]
+  [origins.prom1]
+  origin_type = 'prometheus'
+  origin_url = 'http://prometheus:9090'
+  tracing_name = 'std1'
+  cache_name = 'mem1'
+
+[logging]
+log_level = 'info'
+
+[metrics]
+listen_port = 8481
+```
+3) Create a Dockerfile file (monitorin/trickster/Dockerfile)
+```
+FROM tricksterproxy/trickster:1.1.0-beta
+COPY trickster.conf /etc/trickster/
+```
+4) Build image
+```
+docker build -t $USER_NAME/trickster .
+```
+5) Update the Prometheus configuration and build image
+```
+...
+      - job_name: 'trickster'
+        static_configs:
+          - targets:
+            - 'trickster:8481'
+...
+docker build -t $USER_NAME/prometheus .
+```
+6) Update the Grafana provisioning datasource configuration file and build image
+```
+...
+    - name: prom-trickster-memory-stdout
+      type: prometheus
+      access: proxy
+      orgId: 1
+      uid: ds_prom1_trickster
+      url: http://trickster:8480/prom1
+      version: 1
+      editable: true
+
+docker build -t $USER_NAME/grafana .
+```
+7) Update configuration docker-compose-monitoring.yml
+```
+  trickster:
+    image: ${USER_NAME}/trickster
+    container_name: trickster
+    depends_on:
+      - prometheus
+      - grafana
+    ports:
+      - 8480:8480
+      - 8481:8481
+    networks:
+      - back_net
+```
+8) Run it
+```
+make run
+```
+* Added dashboards to monitor the trickster and to test the trickster datasource (monitoring/grafana/dashboards/TricksterStatus.json & monitoring/grafana/dashboards/DockerMonitorinTrickster.json)
 </details>
