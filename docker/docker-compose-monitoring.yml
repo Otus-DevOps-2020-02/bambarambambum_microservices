@@ -96,6 +96,18 @@ services:
     networks:
       - back_net
 
+  trickster:
+    image: ${USER_NAME}/trickster
+    container_name: trickster
+    depends_on:
+      - prometheus
+      - grafana
+    ports:
+      - 8480:8480
+      - 8481:8481
+    networks:
+      - back_net
+
   alertmanager:
     image: ${USER_NAME}/alertmanager
     container_name: alertmanager

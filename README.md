@@ -501,4 +501,104 @@ docker build -t $USER_NAME/prometheus .
 * stackdriver_monitoring_scrapes_total
 * and another
 
+### Task 3 - *** (Trickster)
+* We can use part of the demo version https://github.com/tricksterproxy/trickster/blob/master/deploy/trickster-demo
+1) Create a folder trickster (monitoring/trickster)
+2) Create a configuration trickster.conf file (monitoring/trickster/trickster.conf)
+```
+[frontend]
+listen_port = 8480
+
+[negative_caches]
+  [negative_caches.default]
+  400 = 3
+  404 = 3
+  500 = 3
+  502 = 3
+
+[caches]
+  [caches.fs1]
+  cache_type = 'filesystem'
+    [caches.fs1.filesystem]
+    cache_path = '/data/trickster'
+    [caches.fs1.index]
+    max_size_objects = 512
+    max_size_backoff_objects = 128
+  [caches.mem1]
+  cache_type = 'memory'
+    [caches.mem1.index]
+    max_size_objects = 512
+    max_size_backoff_objects = 128
+
+[tracing]
+  [tracing.std1]
+  tracer_type = 'stdout'
+    [tracing.std1.stdout]
+    pretty_print = true
+
+[origins]
+  [origins.prom1]
+  origin_type = 'prometheus'
+  origin_url = 'http://prometheus:9090'
+  tracing_name = 'std1'
+  cache_name = 'mem1'
+
+[logging]
+log_level = 'info'
+
+[metrics]
+listen_port = 8481
+```
+3) Create a Dockerfile file (monitorin/trickster/Dockerfile)
+```
+FROM tricksterproxy/trickster:1.1.0-beta
+COPY trickster.conf /etc/trickster/
+```
+4) Build image
+```
+docker build -t $USER_NAME/trickster .
+```
+5) Update the Prometheus configuration and build image
+```
+...
+      - job_name: 'trickster'
+        static_configs:
+          - targets:
+            - 'trickster:8481'
+...
+docker build -t $USER_NAME/prometheus .
+```
+6) Update the Grafana provisioning datasource configuration file and build image
+```
+...
+    - name: prom-trickster-memory-stdout
+      type: prometheus
+      access: proxy
+      orgId: 1
+      uid: ds_prom1_trickster
+      url: http://trickster:8480/prom1
+      version: 1
+      editable: true
+
+docker build -t $USER_NAME/grafana .
+```
+7) Update configuration docker-compose-monitoring.yml
+```
+  trickster:
+    image: ${USER_NAME}/trickster
+    container_name: trickster
+    depends_on:
+      - prometheus
+      - grafana
+    ports:
+      - 8480:8480
+      - 8481:8481
+    networks:
+      - back_net
+```
+8) Run it
+```
+make run
+```
+* Added dashboards to monitor the trickster and to test the trickster datasource (monitoring/grafana/dashboards/TricksterStatus.json & monitoring/grafana/dashboards/DockerMonitorinTrickster.json)
 </details>

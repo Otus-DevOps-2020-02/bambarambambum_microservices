@@ -7,3 +7,12 @@ datasources:
        type: 'prometheus'
        url: 'http://prometheus:9090'
        version: 1
+
+    - name: prom-trickster-memory-stdout
+      type: prometheus
+      access: proxy
+      orgId: 1
+      uid: ds_prom1_trickster
+      url: http://trickster:8480/prom1
+      version: 1
+      editable: true

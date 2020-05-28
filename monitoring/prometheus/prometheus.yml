@@ -93,6 +93,11 @@
           - targets:
             - 'stackdriver:9255'
 
+      - job_name: 'trickster'
+        static_configs:
+          - targets:
+            - 'trickster:8481'
+
     rule_files:
       - "alerts.yml"
 
