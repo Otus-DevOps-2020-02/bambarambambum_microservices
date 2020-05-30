@@ -6,8 +6,7 @@ ENV POST_DATABASE posts
 WORKDIR /app
 COPY . /app
 
-RUN apk --no-cache --update add build-base && \
-    pip install --no-cache-dir -r /app/requirements.txt && \
-    apk del build-base
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev && \
+    pip install --no-cache-dir -r /app/requirements.txt
 
 ENTRYPOINT ["python3", "post_app.py"]

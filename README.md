@@ -437,6 +437,7 @@ docker build -t $USER_NAME/grafana .
   grafana:
     image: ${USER_NAME}/grafana
 ...
+```
 8) Restart all containers and remove the volume of Graphana (used Makefile)
 ```
 make stop
@@ -601,4 +602,108 @@ docker build -t $USER_NAME/grafana .
 make run
 ```
 * Added dashboards to monitor the trickster and to test the trickster datasource (monitoring/grafana/dashboards/TricksterStatus.json & monitoring/grafana/dashboards/DockerMonitorinTrickster.json)
+</details>
+<details><summary>Homework 21 (logging-1)</summary>
+
+### Task 1 - * (Parsing)
+1) We can devide the grok pattern into 2 parts
+```
+<grok>
+    pattern service=%{WORD:service} \| event=%{WORD:event} \| request_id=%{GREEDYDATA:request_id} \| message='%{GREEDYDATA:message}'
+  </grok>
+  <grok>
+    pattern service=%{WORD:service} \| event=%{WORD:event} \| path=%{URIPATH:path} \| request_id=%{GREEDYDATA:request_id} \| remote_addr=%{IP:remote_addr} \| method= %{WORD:message} \| response_status=%{INT:response_status}
+  </grok>
+```
+2) It remains to rebuild the image and check
+```
+make docker_build_fluentd
+make run_logging
+```
+### Task 2 - * (Bugged application)
+1) The first problem I encountered was a long post loading and the error that there is a problem with the comment service. Let's see what zipkin writes.
+```
+Client Start
+Start Time	05/30 19:49:42.848_007
+Relative Time	3.061s
+Address	192.168.48.5:9292 (ui_app)
+
+Client Finish
+Start Time	05/30 19:50:12.967_778
+Relative Time	33.180s
+Address	192.168.48.5:9292 (ui_app)
+
+Tags
+error - 500
+http.path - /5ed26aa51f9dce00140f9416/comments
+http.status - 500
+
+Server Address
+192.168.48.2:9292 (comment)
+
+Site displays - Can't show comments, some problems with the comment service
+```
+2) The problem turned out to be that variables are not declared in the comment service Dockerfile. Declare them in docker-compose.yml
+```
+comment:
+    image: ${USERNAME}/comment:${COMMENT_VER}
+    container_name: comment
+    environment:
+      - ZIPKIN_ENABLED=${ZIPKIN_ENABLED}
+      - COMMENT_DATABASE_HOST=comment_db
+      - COMMENT_DATABASE=comment
+    networks:
+      - front_net
+      - back_net
+```
+3) After that, the problem went away, but a new one appeared, posts did not load fast enough. Let's see what zipkin writes.
+```
+POST
+Client Start
+Start Time	05/30 19:56:35.251_840
+Relative Time	1.716ms
+Address	192.168.48.5:9292 (ui_app)
+
+Server Start
+Start Time	05/30 19:56:35.254_037
+Relative Time	3.913ms
+Address	192.168.48.4:5000 (post)
+
+Server Finish
+Start Time	05/30 19:56:38.265_850
+Relative Time	3.016s
+Address	192.168.48.4:5000 (post)
+
+Client Finish
+Start Time	05/30 19:56:38.286_009
+Relative Time	3.036s
+Address	192.168.48.5:9292 (ui_app)
+
+COMMENT
+Client Start
+Start Time	05/30 19:56:38.286_379
+Relative Time	3.036s
+Address	192.168.48.5:9292 (ui_app)
+
+Client Finish
+Start Time	05/30 19:56:38.304_208
+Relative Time	3.054s
+Address	192.168.48.5:9292 (ui_app)
+```
+* Everywhere a delay of at least 3 seconds, which is suspicious
+4) We find the problem in the /post-py/post_app.py file, someone set a delay of 3 seconds in the find_post (id) block
+```
+def find_post(id):
+...
+        time.sleep(3)
+...
+```
+* Delete or comment out this line
+5) It remains to rebuild the image and restart the application
+```
+make docker_build_post_bug
+make stop_app
+make run_app
+```
+6) No more problems!
 </details>
