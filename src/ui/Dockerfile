@@ -1,4 +1,4 @@
-FROM alpine:3.9
+FROM ruby:2.2-alpine
 
 ENV POST_SERVICE_HOST post
 ENV POST_SERVICE_PORT 5000
@@ -10,10 +10,10 @@ RUN mkdir $APP_HOME
 WORKDIR $APP_HOME
 
 COPY Gemfile* $APP_HOME/
-RUN apk --no-cache update && apk --no-cache --update add \
-    ruby-full ruby-dev build-base ruby-bundler \
+RUN apk add --no-cache --virtual .build-deps build-base \
     && bundle install \
-    && bundle clean --force
+    && bundle clean --force \
+    && apk del .build-deps
 
 COPY . $APP_HOME
 
