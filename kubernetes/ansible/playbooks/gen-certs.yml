@@ -1,0 +1,6 @@
+- name: Generate Certificate's
+  hosts: 127.0.0.1
+  gather_facts: no
+  tasks:
+    - name: Start script
+      command: ./files/gen-certs.sh
