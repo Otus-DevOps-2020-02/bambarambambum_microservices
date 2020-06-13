@@ -1,28 +1,29 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ui
-  labels:
-    app: reddit
-    component: ui
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: reddit
-      component: ui
-  template:
+---
+    apiVersion: apps/v1
+    kind: Deployment
     metadata:
-      name: ui-pod
+      name: ui
       labels:
         app: reddit
         component: ui
     spec:
-      containers:
-      - image: androsovm/ui:1.0
-        name: ui
-        env:
-        - name: env
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
+      replicas: 3
+      selector:
+        matchLabels:
+          app: reddit
+          component: ui
+      template:
+        metadata:
+          name: ui-pod
+          labels:
+            app: reddit
+            component: ui
+        spec:
+          containers:
+          - image: androsovm/ui:1.0
+            name: ui
+          env:
+          - name: env
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
