@@ -22,8 +22,8 @@
           containers:
           - image: androsovm/ui:1.0
             name: ui
-          env:
-          - name: env
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
+            env:
+            - name: env
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
