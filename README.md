@@ -713,6 +713,7 @@ make run_app
 1) By default, if you have a google cloud platform account with a trial period, you cannot use more than four external IP addresses
 Therefore, it is necessary to carefully check the commands before entering and edit them where necessary, so that the total number of instances does not exceed four
 <details><summary>All executable commands that had to be edited here</summary>
+
 ```
 for i in 0 1; do
   gcloud compute instances create controller-${i} \
