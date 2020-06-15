@@ -713,6 +713,7 @@ make run_app
 1) By default, if you have a google cloud platform account with a trial period, you cannot use more than four external IP addresses
 Therefore, it is necessary to carefully check the commands before entering and edit them where necessary, so that the total number of instances does not exceed four
 <details><summary>All executable commands that had to be edited here</summary>
+
 ```
 for i in 0 1; do
   gcloud compute instances create controller-${i} \
@@ -986,4 +987,76 @@ ansible-playbook --connection="local 127.0.0.1" playbooks/gen-certs.yml
 ```
 ansible-playbook playbooks/bootstrap-etcd.yml
 ```
+</details>
+<details><summary>Homework 24 (kubernetes-2)</summary>
+
+### Task 1 - * (GKE deployment with Terraform + Kubernetes Dashboard)
+1) MANAGE KUBERNETES WITH TERRAFORM - Provision a GKE Cluster (Google Cloud)
+https://learn.hashicorp.com/terraform/kubernetes/provision-gke-cluster
+* All files are on the way /kubernetes/terraform
+2) Clone the following repository
+```
+git clone https://github.com/hashicorp/learn-terraform-provision-gke-cluster
+```
+3) Due to the limits of the trial account, we will change the number of nodes from 3 to 1
+* File gke.tf
+```
+...
+# GKE cluster
+resource "google_container_cluster" "primary" {
+  name     = "${var.project_id}-gke"
+  location = var.region
+
+  remove_default_node_pool = true
+  initial_node_count       = 1
+...
+```
+4) Do not forget to change terraform.tfvars
+5) Initialize Terraform workspace
+```
+terraform init
+```
+6) Provision the GKE cluster
+```
+terraform apply
+```
+7) Configure kubectl
+```
+gcloud container clusters get-credentials docker-275315-gke --region europe-west3 --project MY_PROJECT
+```
+8) Deploy and access Kubernetes Dashboard
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta8/aio/deploy/recommended.yaml
+```
+9) Create a proxy server that will allow you to navigate to the dashboard
+```
+kubectl proxy
+curl http://127.0.0.1:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+...
+<head>
+  <meta charset="utf-8">
+  <title>Kubernetes Dashboard</title>
+  <link rel="icon" type="image/png" href="assets/images/kubernetes-logo.png"/>
+  <meta name="viewport" content="width=device-width">
+<link rel="stylesheet" href="styles.dd2d1d3576191b87904a.css"></head>
+...
+
+```
+10) Authenticate to Kubernetes Dashboard
+```
+kubectl apply -f https://raw.githubusercontent.com/hashicorp/learn-terraform-provision-eks-cluster/master/kubernetes-dashboard-admin.rbac.yaml
+```
+11) Generate the authorization token
+```
+kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep service-controller-token | awk '{print $1}')
+```
+* Output
+```
+Data
+====
+namespace:  11 bytes
+token:      eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2Nv...
+ca.crt:     1119 bytes
+```
+
 </details>
