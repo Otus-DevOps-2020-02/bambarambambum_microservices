@@ -1060,3 +1060,53 @@ ca.crt:     1119 bytes
 ```
 
 </details>
+<details><summary>Homework 23 (kubernetes-3)</summary>
+
+### Task 1 - * (TLS Secrets)
+
+1) Delete old secrets
+```
+kubectl delete secret ui-ingress -n dev
+```
+2) We encode the certificate and key in base64
+```
+cat tls.crt | base64 | tr -d '\n'
+cat tls.key | base64 | tr -d '\n'
+```
+3) Create a manifest secret.yml
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ui-ingress
+  namespace: dev
+data:
+  tls.crt: LS0tLS1CRUdJTiB......
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFI......
+type: kubernetes.io/tls
+```
+4) Apply
+```
+kubectl apply -f secret.yml -n dev
+```
+
+### Task 2 - (Update mongo-network-policy.yml)
+1) Create second "from"
+```
+      ingress:
+      - from:
+        - podSelector:
+            matchLabels:
+              app: reddit
+              component: comment
+      - from:
+        - podSelector:
+            matchLabels:
+              app: reddit
+              component: post
+```
+2) Apply
+```
+kubectl apply -f mongo-network-policy.yml -n dev
+```
+</details>
