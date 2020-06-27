@@ -1110,3 +1110,130 @@ kubectl apply -f secret.yml -n dev
 kubectl apply -f mongo-network-policy.yml -n dev
 ```
 </details>
+<details><summary>Homework 24 (kubernetes-4)</summary>
+
+### Task 1 - _helpers.tpl
+1) _Helpers.tpl files created
+* comment/templates/_helpers.tpl
+```
+{{- define "comment.fullname" -}}
+{{- printf "%s-%s" .Release.Name .Chart.Name }}
+{{- end -}}
+```
+* post/templates/_helpers.tpl
+```
+{{- define "post.fullname" -}}
+{{- printf "%s-%s" .Release.Name .Chart.Name }}
+{{- end -}}
+```
+* ui/templates/_helpers.tpl
+```
+{{- define "ui.fullname" -}}
+{{- printf "%s-%s" .Release.Name .Chart.Name }}
+{{- end -}}
+```
+2) All templates/*.yaml files edited where necessary
+
+### Task 2 - New projects
+1) Projects created ui post comment in Gitlab
+
+### Task 3 - Init repos post & comment
+1) Initialized and committed repos post and ui
+
+### Task 4 - Init repo reddit-deploy
+1) Initialized and committed repo reddit-deploy
+
+### Task 5 - Add pipelines for post & comment
+1) Add and committed pipelines for post & comment
+
+### Task 6 - Add updated pipelines for post & comment
+1) Add and committed updated pipelines for post & comment
+
+### Task 7 - Edit pipelines COMMENT & POST
+1) COMMENT pipeline
+* Add lines to install the tiller plugin
+```
+...
+- echo "Installing Tiller plugin..."
+    - helm init --client-only
+    - helm plugin install https://github.com/rimusz/helm-tiller
+...
+```
+* Edit "run" line
+```
+...
+helm tiller run -- helm upgrade \
+...
+```
+2) POST pipeline
+* Download the helm3
+```
+...
+curl https://get.helm.sh/helm-v3.2.4-linux-amd64.tar.gz | tar zx # Helm 3
+...
+```
+* Remove helm init & tiller, because helm init & tiller has been removed in version 3
+### Task 8 - Redo reddit-deploy pipeline
+1) Done
+### Task 9 - Auto-deploy release to production from master branch
+1) In each pipeline (ui, post, comment) we add a new stage "release_deploy"
+```
+stages:
+  - build
+  - test
+  - review
+  - release
+  - release_deploy <<<<<
+  - cleanup
+```
+2) We describe it in the pipeline
+```
+release_deploy:
+  stage: release_deploy
+  variables:
+    TRIGGER_TOKEN: MY_TOKEN
+    REF: master
+  only:
+    - master
+  before_script:
+    - apk add -U curl
+  script:
+    - >
+      curl -X POST \
+       -F token="$TRIGGER_TOKEN" \
+       -F ref="$REF" \
+       http://gitlab-gitlab/api/v4/projects/1/trigger/pipeline
+```
+3) Register a trigger in gitlab
+```
+http://gitlab-gitlab/androsovm/reddit-deploy/settings/ci_cd
+```
+4) We edit the pipeline "reddit-deploy" in such a way that the stage of staging is not triggered
+```
+staging:
+  stage: staging
+...
+  except:
+    - triggers
+```
+5) We also make changes to the production stage
+```
+production:
+  stage: production
+  ...
+  only:
+    refs:
+      - master
+      - triggers
+```
+6) Now make changes and push them into the master branch
+```
+cd Gitlab_ci/post
+git commit -am "Added auto_deploy trigger"
+git checkout master
+git merge feature/3
+```
+7) Now results
+https://drive.google.com/file/d/12XSsImchmSlt8HOJKl47GK9AKPLQakGH/view?usp=sharing
+https://drive.google.com/file/d/13LkPwY4xFd0hyABXE9JcVggxK5UqNTBq/view?usp=sharing
+</details>
