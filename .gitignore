@@ -8,3 +8,4 @@ variables.json
 *.env
 project.json
 bugged-code
+Gitlab_ci
