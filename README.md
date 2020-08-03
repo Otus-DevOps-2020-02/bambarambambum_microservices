@@ -1237,3 +1237,125 @@ git merge feature/3
 https://drive.google.com/file/d/12XSsImchmSlt8HOJKl47GK9AKPLQakGH/view?usp=sharing
 https://drive.google.com/file/d/13LkPwY4xFd0hyABXE9JcVggxK5UqNTBq/view?usp=sharing
 </details>
+<details><summary>Homework 25 (kubernetes-5)</summary>
+### Task 1 - Enable NodeExporter
+```
+nodeExporter:
+  ## If false, node-exporter will not be installed
+  ##
+  enabled: true
+```
+```
+  helm upgrade prom . -f custom_values.yml --install
+```
+
+### Task 2 - Separate reddit-endpoints
+1) To separate the reddit-endpoints configuration, just specify a new source_labels with the name of the desired service
+```
+- job_name: 'comment-endpoints'
+...
+          - source_labels: [__meta_kubernetes_service_label_app]
+            action: keep
+            regex: reddit
+          - source_labels: [__meta_kubernetes_service_label_component]
+            action: keep
+            regex: comment
+...
+```
+
+### Task 3 - Dashboards
+1) Added 3 dashboards
+```
+UI_Service_Monitoring
+Business_Logic_Monitoring
+Docker and system monitoring
+```
+### Task 4 - Template Parameterization
+1) UI_Service_Monitroing
+```
+rate(ui_request_count{kubernetes_namespace=~"$namespace",http_status=~"^[2].*"}[1m])
+rate(ui_request_count{kubernetes_namespace=~"$namespace",http_status=~"^[45].*"}[1m])
+histogram_quantile(0.95, sum(rate(ui_request_latency_seconds_bucket{kubernetes_namespace=~"$namespace"}[5m])) by (le))
+```
+2) Business_Logic_Monitorin
+```
+rate(comment_count{kubernetes_namespace=~"$namespace"}[1h])
+rate(post_count{kubernetes_namespace=~"$namespace"}[1h])
+```
+3) Docker and system monitoring
+```
+Where - container_..._... - namespace=~"$namespace"
+      - node_..._... - kubernetes_namespace=~"$namespace"
+
+time() - node_boot_time{kubernetes_namespace=~"$namespace",instance=~"$server:.*"}
+Disk space - min((node_filesystem_size{kubernetes_namespace=~"$namespace", fstype=~"xfs|ext4",instance=~"$server:.*"} - node_filesystem_free{kubernetes_namespace=~"$namespace", fstype=~"xfs|ext4",instance=~"$server:.*"} )/ node_filesystem_size{kubernetes_namespace=~"$namespace", fstype=~"xfs|ext4",instance=~"$server:.*"})
+...
+sum(container_spec_memory_limit_bytes{namespace=~"$namespace", name=~".+"} - container_memory_usage_bytes{namespace=~"$namespace", name=~".+"}) by (name)
+...
+```
+
+### Task 5 * - Alertmanager
+1) Alertmanager config setup below
+```
+alertmanager ConfigMap entries
+alertmanagerFiles:
+  alertmanager.yml:
+    global:
+      slack_api_url: "https://hooks.slack.com/services/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"
+
+    receivers:
+      - name: "slack-notifications"
+        slack_configs:
+         - channel: "#mikhail_androsov"
+
+    route:
+      receiver: "slack-notifications"
+```
+2) Prometheus server ConfigMap Alert entries
+```
+serverFiles:
+  alerts:
+    groups:
+      - name: NodeDown
+        rules:
+        - alert: NodeDown
+          expr: up == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Node down"
+            description: "Node has been down for more than 1 minute."
+```
+### Task 6 * - prometheus-operator
+1) Post endpoints monitoring configuration
+```
+additionalScrapeConfigs:
+      - job_name: 'post-endpoints'
+
+        kubernetes_sd_configs:
+          - role: endpoints
+
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_label_app]
+            action: keep
+            regex: reddit
+          - source_labels: [__meta_kubernetes_service_label_component]
+            action: keep
+            regex: post
+          - action: labelmap
+            regex: __meta_kubernetes_service_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_service_name]
+            target_label: kubernetes_name
+```
+2) ServiceMonitor
+Charts/prometheus-operator/templates/prometheus-operator/servicemonitor.yaml
+### Task 7 * - Helm Chart's EFK
+1) Chart/efk folder
+Running
+```
+helm install --name=efk efk/
+```
+</details>

@@ -1,0 +1,5 @@
+{
+      "my_project_id": "docker-275315",
+      "my_source_image_family": "ubuntu-1604-lts",
+      "my_machine_type": "f1-micro"
+}
