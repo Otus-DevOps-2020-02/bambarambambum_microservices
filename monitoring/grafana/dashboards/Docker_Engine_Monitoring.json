@@ -88,7 +88,7 @@
               "rgba(237, 129, 40, 0.89)",
               "rgba(50, 172, 45, 0.97)"
             ],
-            "datasource": "Prometheus server",
+            "datasource": "Prometheus",
             "description": "Number of CPUs",
             "format": "none",
             "gauge": {
@@ -172,7 +172,7 @@
           {
             "aliasColors": {},
             "bars": false,
-            "datasource": "Prometheus server",
+            "datasource": "Prometheus",
             "description": "Measuring some percentiles performance",
             "fill": 1,
             "id": 14,
@@ -281,7 +281,7 @@
           {
             "aliasColors": {},
             "bars": false,
-            "datasource": "Prometheus server",
+            "datasource": "Prometheus",
             "fill": 1,
             "id": 15,
             "legend": {
@@ -368,7 +368,7 @@
           {
             "aliasColors": {},
             "bars": false,
-            "datasource": "Prometheus server",
+            "datasource": "Prometheus",
             "description": "Measuring some percentiles performance",
             "fill": 1,
             "id": 22,
@@ -477,7 +477,7 @@
           {
             "aliasColors": {},
             "bars": false,
-            "datasource": "Prometheus server",
+            "datasource": "Prometheus",
             "fill": 1,
             "id": 19,
             "legend": {
@@ -564,7 +564,7 @@
           {
             "aliasColors": {},
             "bars": false,
-            "datasource": "Prometheus server",
+            "datasource": "Prometheus",
             "description": "Measuring histogram on some percentile",
             "fill": 1,
             "id": 21,
@@ -673,7 +673,7 @@
           {
             "aliasColors": {},
             "bars": false,
-            "datasource": "Prometheus server",
+            "datasource": "Prometheus",
             "decimals": 0,
             "fill": 1,
             "id": 20,
@@ -759,7 +759,7 @@
           {
             "aliasColors": {},
             "bars": false,
-            "datasource": "Prometheus server",
+            "datasource": "Prometheus",
             "decimals": 0,
             "fill": 1,
             "id": 23,
@@ -958,7 +958,7 @@
         {
           "allValue": null,
           "current": {},
-          "datasource": "Prometheus server",
+          "datasource": "Prometheus",
           "hide": 0,
           "includeAll": true,
           "label": "Instance",
